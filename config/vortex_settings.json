@@ -1,0 +1,4 @@
+{
+    "Max-Entities" :  4096,
+    "Max-Components" : 32
+}

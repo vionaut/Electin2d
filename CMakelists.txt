@@ -1,0 +1,59 @@
+cmake_minimum_required(VERSION 4.0)
+
+project(vortex
+    VERSION 1.0.0
+    DESCRIPTION "An ECS game engine in C++"
+    LANGUAGES CXX
+)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Vortex config generator--
+set(JSON_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/config/vortex_settings.json")
+set(PYTHON_GENERATOR "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_config.py")
+set(GENERATED_HPP_FILE "${CMAKE_CURRENT_SOURCE_DIR}/include/vortex/core/config/vortex_config.hpp")
+
+add_custom_command(
+    OUTPUT ${GENERATED_HPP_FILE}
+    COMMAND python ${PYTHON_GENERATOR} ${JSON_CONFIG_FILE} ${GENERATED_HPP_FILE}
+    DEPENDS ${JSON_CONFIG_FILE} ${PYTHON_GENERATOR}
+    COMMENT "Generating vortex_generated_config.hpp from JSON..."
+)
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+# THIRD PARTY LIBRARIES
+
+# raylib---
+add_subdirectory(vendor/raylib)
+# Note: raylib's CMake automatically handles include directories and linking
+
+# nlohmann/json---
+# Since json is header-only, we create an INTERFACE library
+add_library(json INTERFACE)
+target_include_directories(json INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/json)
+
+# odygrd/quill (The logger API)---
+add_subdirectory(vendor/quill)
+
+# erincatto/box2d---
+add_subdirectory(vendor/box2d)
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+# INTERFACE for all the include paths
+add_library(vortex_includes INTERFACE)
+target_include_directories(vortex_includes INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+
+#----------------------------------------------------------------------------------------------------------------------------------
+# ENGINE SOURCE
+add_subdirectory(src)
+
+#----------------------------------------------------------------------------------------------------------------------------------
+# EXECUTABLES / TESTS
+if(PROJECT_IS_TOP_LEVEL)
+    add_executable(test test.cpp)
+    target_link_libraries(test PRIVATE vortex::vortex)
+endif()

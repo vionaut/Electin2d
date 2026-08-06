@@ -7348,8 +7348,12 @@ struct wide_string_input_helper<BaseInputAdapter, 4>
             }
             else
             {
-                // unknown character
-                utf8_bytes[0] = static_cast<std::char_traits<char>::int_type>(wc);
+                // A code point above U+10FFFF has no UTF-8 encoding. Passing the
+                // unit through would narrow it to int, where 0xFFFFFFFF becomes
+                // char_traits<char>::eof() and would end the input silently, so
+                // emit a byte that is never valid UTF-8 and let the decoder
+                // reject it.
+                utf8_bytes[0] = 0xFF;
                 utf8_bytes_filled = 1;
             }
         }
@@ -9071,6 +9075,11 @@ scan_number_done:
         token_buffer.clear();
         decimal_point_position = std::string::npos;
 
+#if JSON_DIAGNOSTIC_POSITIONS
+        // the first character of the token has already been read, hence the -1
+        token_start_position = position.chars_read_total - 1;
+#endif
+
         note_token_start(std::integral_constant<bool, lazy_token_string> {});
     }
 
@@ -9232,6 +9241,15 @@ scan_number_done:
     {
         return position;
     }
+
+#if JSON_DIAGNOSTIC_POSITIONS
+    /// return the offset of the first character of the last read token; unlike
+    /// the token's parsed value, this accounts for escape sequences
+    constexpr std::size_t get_token_start_position() const noexcept
+    {
+        return token_start_position;
+    }
+#endif
 
     /// seekable adapter: rebuild the last read token from the input on demand
     const std::vector<char_type>& collect_token_chars(std::vector<char_type>& out, std::true_type /*lazy*/) const
@@ -9432,6 +9450,12 @@ scan_number_done:
     /// start offset of the current token within the input, used to reconstruct
     /// the last read token on error for seekable adapters (see collect_token_chars)
     std::size_t token_string_start = 0;
+
+#if JSON_DIAGNOSTIC_POSITIONS
+    /// start offset of the current token within the input, used to report
+    /// diagnostic positions (see reset())
+    std::size_t token_start_position = 0;
+#endif
 
     /// buffer for variable-length tokens (numbers, strings)
     string_t token_buffer {};
@@ -9809,8 +9833,10 @@ class json_sax_dom_parser
 
                 case value_t::string:
                 {
-                    // include the length of the quotes, which is 2
-                    v.start_position = v.end_position - v.m_data.m_value.string->size() - 2;
+                    // escape sequences make the token longer than the value it
+                    // parses to, so the start position cannot be derived from
+                    // the value; use the offset the lexer recorded instead
+                    v.start_position = m_lexer_ref->get_token_start_position();
                     break;
                 }
 
@@ -10208,8 +10234,10 @@ class json_sax_dom_callback_parser
 
                 case value_t::string:
                 {
-                    // include the length of the quotes, which is 2
-                    v.start_position = v.end_position - v.m_data.m_value.string->size() - 2;
+                    // escape sequences make the token longer than the value it
+                    // parses to, so the start position cannot be derived from
+                    // the value; use the offset the lexer recorded instead
+                    v.start_position = m_lexer_ref->get_token_start_position();
                     break;
                 }
 
@@ -12582,7 +12610,11 @@ class binary_reader
     {
         if (get_char)
         {
-            get();  // TODO(niels): may we ignore N here?
+            // no get_ignore_noop() here: the byte read next must be a string
+            // length type specification, and a no-op ('N') is not valid in
+            // that position. No-ops at positions where a value may appear are
+            // already consumed by the callers via get_ignore_noop().
+            get();
         }
 
         if (JSON_HEDLEY_UNLIKELY(!unexpect_eof(input_format, "value")))
@@ -18573,7 +18605,23 @@ class binary_writer
             {
                 return true;
             }
-            len *= static_cast<std::size_t>(el.template get<std::uint64_t>());
+
+            // a dimension that does not fit into std::size_t, or a product that
+            // overflows it, would wrap around and could match the size of
+            // _ArrayData_ by accident; the resulting header announces an
+            // element count that no reader can honor (the binary reader rejects
+            // it with out_of_range.408), so encode as a plain object instead
+            const auto dim = el.template get<std::uint64_t>();
+            if (!value_in_range_of<std::size_t>(dim))
+            {
+                return true;
+            }
+            const auto dim_size = static_cast<std::size_t>(dim);
+            if (dim_size != 0 && len > (std::numeric_limits<std::size_t>::max)() / dim_size)
+            {
+                return true;
+            }
+            len *= dim_size;
         }
 
         key = "_ArrayData_";

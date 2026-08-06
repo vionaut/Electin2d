@@ -54,6 +54,6 @@ add_subdirectory(src)
 #----------------------------------------------------------------------------------------------------------------------------------
 # EXECUTABLES / TESTS
 if(PROJECT_IS_TOP_LEVEL)
-    add_executable(test test.cpp)
-    target_link_libraries(test PRIVATE vortex::vortex)
+    add_executable(vortex_test "${CMAKE_CURRENT_SOURCE_DIR}/test/test.cpp")
+    target_link_libraries(vortex_test PRIVATE vortex)
 endif()

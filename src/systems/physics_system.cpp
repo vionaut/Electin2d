@@ -207,7 +207,7 @@ namespace vortex::systems
 
         b2_body.gravityScale = rigid_body.gravity_scale;
 
-        b2_body.fixedRotation = rigid_body.fixed_rotation;
+        b2_body.motionLocks.angularZ = rigid_body.fixed_rotation;
 
         b2_body.userData = reinterpret_cast<void*>(ent);
 

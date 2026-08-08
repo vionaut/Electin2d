@@ -24,6 +24,10 @@ def main():
     max_components = data.get("Max-Components", 32)
     max_render_commands = data.get("Max-Render-Commands", 8192)
 
+    max_textures = data.get("Max-Textures", 128);
+    max_sounds = data.get("Max-Sounds", 128);
+    max_musics = data.get("Max-Musics", 128);
+
     if max_entities > (1 << 64) - 2:
         max_entities = (1 << 64) - 2
 
@@ -49,6 +53,9 @@ namespace vortex::config
     constexpr uint64_t MAX_ENTITIES = {max_entities};
     constexpr size_t MAX_COMPONENTS = {max_components};
     constexpr size_t MAX_RENDER_COMMANDS = {max_render_commands};
+    constexpr size_t MAX_TEXTURES = {max_textures};
+    constexpr size_t MAX_SOUNDS = {max_sounds};
+    constexpr size_t MAX_MUSICS = {max_musics};
     
     // Dependent (Calculated by Python)
     constexpr uint64_t ENTITY_INDEX_BITS = {entity_index_bits};

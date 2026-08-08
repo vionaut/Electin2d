@@ -9,19 +9,19 @@ namespace vortex::utils
     // --- Math & Bounds ---
 
     template <typename T>
-    constexpr const T& min(const T& a, const T& b)
+    constexpr const T &min(const T &a, const T &b)
     {
         return std::min(a, b);
     }
 
     template <typename T>
-    constexpr const T& max(const T& a, const T& b)
+    constexpr const T &max(const T &a, const T &b)
     {
         return std::max(a, b);
     }
 
     template <typename T>
-    constexpr const T& clamp(const T& v, const T& lo, const T& hi)
+    constexpr const T &clamp(const T &v, const T &lo, const T &hi)
     {
         return std::clamp(v, lo, hi);
     }
@@ -75,7 +75,7 @@ namespace vortex::utils
     }
 
     template <typename InputIt, typename T>
-    InputIt find(InputIt first, InputIt last, const T& value)
+    InputIt find(InputIt first, InputIt last, const T &value)
     {
         if (first == last)
         {
@@ -103,13 +103,13 @@ namespace vortex::utils
     }
 
     template <typename F, typename Tuple>
-    constexpr decltype(auto) apply(F&& f, Tuple&& t)
+    constexpr decltype(auto) apply(F &&f, Tuple &&t)
     {
         return std::apply(std::forward<F>(f), std::forward<Tuple>(t));
     }
 
-    template<typename... Args>
-    auto memcpy(Args&&... args)
+    template <typename... Args>
+    auto memcpy(Args &&...args)
     {
         return std::memcpy(std::forward<Args>(args)...);
     }

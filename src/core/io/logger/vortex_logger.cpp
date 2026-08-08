@@ -14,7 +14,7 @@
 #include <format>
 #include <filesystem>
 
-quill::Logger* vortex::io::VxLogger::logger = nullptr;
+quill::Logger *vortex::io::VxLogger::logger = nullptr;
 
 void vortex::io::VxLogger::init()
 {
@@ -25,17 +25,19 @@ void vortex::io::VxLogger::init()
 	// quill frontend
 	auto console_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("c_sink");
 
-	//formatting the log file name
+	// formatting the log file name
 	auto now = std::chrono::system_clock::now();
-	auto duration_seconds = std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::floor<std::chrono::seconds>(now) };
+	auto duration_seconds = std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::floor<std::chrono::seconds>(now)};
 	std::string filename = "logs/vortex_" + std::format("{:%Y_%m_%d_%H_%M_%S}", duration_seconds) + ".log";
 
 	quill::FileEventNotifier f_notifier;
-	f_notifier.before_open = [](std::filesystem::path const& filename) {
-		if (filename.has_parent_path()) {
+	f_notifier.before_open = [](std::filesystem::path const &filename)
+	{
+		if (filename.has_parent_path())
+		{
 			std::filesystem::create_directories(filename.parent_path());
 		}
-		};
+	};
 	auto file_sink = quill::Frontend::create_or_get_sink<quill::FileSink>(
 		filename, []()
 		{
@@ -43,8 +45,7 @@ void vortex::io::VxLogger::init()
 			cfg.set_open_mode('w');
 			return cfg; }(), f_notifier);
 
-
-	logger = quill::Frontend::create_or_get_logger("root", { std::move(console_sink), std::move(file_sink) });
+	logger = quill::Frontend::create_or_get_logger("root", {std::move(console_sink), std::move(file_sink)});
 }
 
 void vortex::io::VxLogger::setLogLevel(vortex::io::VxLogLevel level)
@@ -72,7 +73,7 @@ void vortex::io::VxLogger::setLogLevel(vortex::io::VxLogLevel level)
 	}
 }
 
-quill::Logger* vortex::io::VxLogger::getLoggerAPI()
+quill::Logger *vortex::io::VxLogger::getLoggerAPI()
 {
 	return VxLogger::logger;
 }

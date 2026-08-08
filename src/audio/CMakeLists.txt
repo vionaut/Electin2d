@@ -1,0 +1,2 @@
+add_library(vortex_audio raylib_audio.cpp)
+target_link_libraries(vortex_audio PUBLIC vortex_includes PRIVATE raylib)

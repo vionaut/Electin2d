@@ -3,6 +3,7 @@ add_subdirectory(ecs)
 add_subdirectory(input)
 add_subdirectory(renderer)
 add_subdirectory(systems)
+add_subdirectory(audio)
 
 # UMBRELLA TARGET
 add_library(vortex INTERFACE)
@@ -18,4 +19,5 @@ target_link_libraries(vortex INTERFACE
     vortex_renderer
     vortex_physics_system
     vortex_logger
+    vortex_audio
 )

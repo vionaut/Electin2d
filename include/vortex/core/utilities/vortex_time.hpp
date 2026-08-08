@@ -19,7 +19,7 @@ namespace vortex::utils
         static double getUnscaledDeltaTime();
 
         // --- Total Time ---
-        // Total time elapsed since init() *affected by time scale*. 
+        // Total time elapsed since init() *affected by time scale*.
         static double getGameTime();
 
         // Total real-world time elapsed since init() in seconds.

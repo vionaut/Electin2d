@@ -18,7 +18,7 @@ namespace vortex::ecs
 
 		virtual void remove(VxEntity ent) = 0;
 
-		virtual const vortex::containers::VxArray<VxEntity>& getEntityList() const = 0;
+		virtual const vortex::containers::VxArray<VxEntity> &getEntityList() const = 0;
 	};
 
 	template <typename T>
@@ -41,7 +41,7 @@ namespace vortex::ecs
 			VX_LOG_INFO("[{}] initialized succesfully.", VX_FUNC_SIG);
 		}
 
-		void add(VxEntity ent, const T& component)
+		void add(VxEntity ent, const T &component)
 		{
 			VxEntity index = getEntityIndex(ent);
 			if (m_sparseArray[index] == ecs::VX_NULL_ENTITY)
@@ -54,14 +54,14 @@ namespace vortex::ecs
 				return;
 			}
 
-			T& old_data = m_denseArray[m_sparseArray[index]];
+			T &old_data = m_denseArray[m_sparseArray[index]];
 			VX_LOG_WARNING("Entity with id: {} already has a component: {}, Overriding with new data: {}", ent, old_data, component);
 			old_data = std::move(component);
 
 			VX_LOG_DEBUG("Overrode {} to entity with id: {}", component, ent);
 		}
 
-		void add(VxEntity ent, T&& component)
+		void add(VxEntity ent, T &&component)
 		{
 			VxEntity index = getEntityIndex(ent);
 			if (m_sparseArray[index] == ecs::VX_NULL_ENTITY)
@@ -75,7 +75,7 @@ namespace vortex::ecs
 				return;
 			}
 
-			T& old_data = m_denseArray[m_sparseArray[index]];
+			T &old_data = m_denseArray[m_sparseArray[index]];
 			VX_LOG_WARNING("Entity with id: {} already has a component: {}, Overriding with new data: {}", ent, old_data, component);
 			old_data = std::move(component);
 
@@ -87,14 +87,14 @@ namespace vortex::ecs
 			return m_sparseArray[getEntityIndex(ent)] != ecs::VX_NULL_ENTITY;
 		}
 
-		T& get(VxEntity ent)
+		T &get(VxEntity ent)
 		{
 			VX_ASSERT(has(ent), "Tried to acess uninitialized {} for entity id: {}", VX_FUNC_SIG, ent);
 
 			return m_denseArray[m_sparseArray[getEntityIndex(ent)]];
 		}
 
-		const T& get(VxEntity ent) const
+		const T &get(VxEntity ent) const
 		{
 			VX_ASSERT(has(ent), "Tried to acess uninitialized {} for entity id: {}", VX_FUNC_SIG, ent);
 
@@ -124,7 +124,7 @@ namespace vortex::ecs
 			VX_LOG_DEBUG("{} Succesful.", VX_FUNC_SIG);
 		}
 
-		VxComponentPool<T>* castToType(void* ptr)
+		VxComponentPool<T> *castToType(void *ptr)
 		{
 			return static_cast<VxComponentPool<T> *>(ptr);
 		}
@@ -134,7 +134,7 @@ namespace vortex::ecs
 			return m_denseArray.size();
 		}
 
-		const containers::VxArray<VxEntity>& getEntityList() const override
+		const containers::VxArray<VxEntity> &getEntityList() const override
 		{
 			return m_denseToSparse;
 		}

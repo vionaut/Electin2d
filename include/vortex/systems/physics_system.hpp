@@ -10,7 +10,7 @@ namespace vortex::systems
     class VxPhysicsSystem
     {
     public:
-        VxPhysicsSystem(void* reg, math::VxVec2 gravity);
+        VxPhysicsSystem(void *reg, math::VxVec2 gravity);
         ~VxPhysicsSystem();
 
         void update(float dt);
@@ -18,18 +18,18 @@ namespace vortex::systems
         void setGravity(math::VxVec2 gravity);
         void setSubStepCount(int count);
 
-        void applyLinearImpulse(uint64_t ent, const math::VxVec2& point, const math::VxVec2& linear_impulse);
+        void applyLinearImpulse(uint64_t ent, const math::VxVec2 &point, const math::VxVec2 &linear_impulse);
         void applyAngularImpulse(uint64_t ent, float angular_impulse);
 
-        void applyForce(uint64_t ent, const math::VxVec2& point, const math::VxVec2& linear_force);
+        void applyForce(uint64_t ent, const math::VxVec2 &point, const math::VxVec2 &linear_force);
         void applyTorque(uint64_t ent, float torque);
 
-        void setLinearVelocity(uint64_t ent, const math::VxVec2& new_velocity);
+        void setLinearVelocity(uint64_t ent, const math::VxVec2 &new_velocity);
         void setAngularVelocity(uint64_t ent, float new_angular_velocity);
 
-        void setTransform(uint64_t ent, const components::VxTransformComponent& new_transform);
+        void setTransform(uint64_t ent, const components::VxTransformComponent &new_transform);
 
-        void createPhysicsEntity(uint64_t ent); // Physics system needs to create an internal physics entity after the entity manager to apply physics on it
+        void createPhysicsEntity(uint64_t ent);  // Physics system needs to create an internal physics entity after the entity manager to apply physics on it
         void destroyPhysicsEntity(uint64_t ent); // To destroy the said entity
 
         void attachBoxCollider(uint64_t ent);
@@ -38,7 +38,6 @@ namespace vortex::systems
 
     private:
         // Private functions---
-
 
         // Member variables---
 
@@ -50,7 +49,7 @@ namespace vortex::systems
 
         math::VxVec2 m_gravity; // The rate at which thou shall descend to the depth of hell, well since it's a vector, you can descend horizontally too
 
-        void* m_registry; // As a good programmer(I hope) should! This holds the pointer to the registry to make changes into it i guess
+        void *m_registry; // As a good programmer(I hope) should! This holds the pointer to the registry to make changes into it i guess
 
         uint32_t m_worldId; // The box2d world id, that's right, we're giving out world ids now
     };

@@ -10,7 +10,6 @@ namespace vortex::ecs
     class VxEntityManager
     {
     public:
-
         VxEntityManager();
         ~VxEntityManager() = default;
 

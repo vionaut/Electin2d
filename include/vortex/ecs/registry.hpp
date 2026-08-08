@@ -89,7 +89,7 @@ namespace vortex::ecs
         T &getComponent(VxEntity ent)
         {
             VxComponentPool<T> *pool_ptr = getPool<T>();
-            if(!pool_ptr)
+            if (!pool_ptr)
             {
                 VX_LOG_CRITICAL("[Registry] Attemtped to {} from unitialized component pool for entity with id: {}", VX_FUNC_SIG, ent);
                 io::VxLogger::flush();
@@ -103,7 +103,7 @@ namespace vortex::ecs
         const T &getComponent(VxEntity ent) const
         {
             VxComponentPool<T> *pool_ptr = getPool<T>();
-            if(!pool_ptr)
+            if (!pool_ptr)
             {
                 VX_LOG_CRITICAL("[Registry] Attemtped to {} from unitialized component pool for entity with id: {}", VX_FUNC_SIG, ent);
                 io::VxLogger::flush();

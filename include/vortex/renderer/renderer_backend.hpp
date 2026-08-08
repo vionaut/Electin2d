@@ -1,19 +1,32 @@
 #pragma once
 
-#include "vortex/renderer/render_queue.hpp"
+#include "vortex/renderer/command_buffer.hpp"
+#include "vortex/renderer/vortex_graphics.hpp"
+#include "vortex/core/containers/static_array.hpp"
 
 // Compile-Time Polymorphism Contract
-// This file declares the interface. 
+// This file declares the interface.
 // ONLY the active renderer (e.g., raylib_renderer.cpp) will implement these.
 
 namespace vortex::renderer::backend
 {
-    void initWindow(int width, int height, const char* title);
+    void initWindow(int width, int height, const char *title);
     void closeWindow();
 
     bool shouldClose();
 
+    VxTexture loadTexture(const char *file_path);
+    void unloadTexture(VxTexture texture);
+
     void beginFrame();
-    void executeQueue(const VxRenderQueue& queue);
+
+    /*
+    * @brief executes the render commands every frame
+    @param buffer refrence to the command buffer
+    @param textures pointer to the array containing texture ids
+    @param camera pretty self explanatory, but yeah a reference to the current camera
+    */
+
+    void executeQueue(const VxCommandBuffer &buffer, containers::VxStaticArray<VxTexture, config::MAX_TEXTURES>& textures, const VxCamera2d& camera);
     void endFrame();
 }

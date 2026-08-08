@@ -20,10 +20,10 @@ namespace vortex::ecs
                 const IPool *base_pools[] = {static_cast<const IPool *>(pools)...};
 
                 const IPool *min_pool = *utils::minElement(std::begin(base_pools), std::end(base_pools),
-                                                          [](const IPool *a, const IPool *b)
-                                                          {
-                                                              return a->size() < b->size();
-                                                          });
+                                                           [](const IPool *a, const IPool *b)
+                                                           {
+                                                               return a->size() < b->size();
+                                                           });
 
                 m_targetPool = min_pool;
             }
@@ -106,7 +106,7 @@ namespace vortex::ecs
         bool hasAllComponents(VxEntity ent) const
         {
             return utils::apply([ent](VxComponentPool<Components> *...pools)
-                              { return (pools->has(ent) && ...); }, m_pools);
+                                { return (pools->has(ent) && ...); }, m_pools);
         }
 
         vortex::containers::VxTuple<VxComponentPool<Components> *...> m_pools;

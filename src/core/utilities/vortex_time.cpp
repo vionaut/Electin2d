@@ -36,7 +36,7 @@ namespace vortex::utils
     double VxTime::getUnscaledDeltaTime() { return s_unscaledDeltaTime; }
     double VxTime::getGameTime() { return s_gameTime; }
     double VxTime::getRealTime() { return s_realTime; }
-    
+
     void VxTime::setTimeScale(double scale) { s_timeScale = scale; }
     double VxTime::getTimeScale() { return s_timeScale; }
 }

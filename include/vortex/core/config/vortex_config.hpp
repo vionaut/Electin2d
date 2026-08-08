@@ -2,13 +2,16 @@
 #pragma once
 #include <cstdint>
 
-namespace vortex::config 
+namespace vortex::config
 {
     // Independent (From JSON)
     constexpr uint64_t MAX_ENTITIES = 4096;
     constexpr size_t MAX_COMPONENTS = 32;
     constexpr size_t MAX_RENDER_COMMANDS = 8192;
-    
+    constexpr size_t MAX_TEXTURES = 128;
+    constexpr size_t MAX_SOUNDS = 128;
+    constexpr size_t MAX_MUSICS = 128;
+
     // Dependent (Calculated by Python)
     constexpr uint64_t ENTITY_INDEX_BITS = 12;
     constexpr uint64_t ENTITY_GENERATION_BITS = 52;
@@ -22,13 +25,13 @@ namespace vortex::config
 #define VX_DELETE(ptr) delete ptr
 
 #define VX_NEW_S(Type, size) new Type[size] // Sequence new (For Arrays)
-#define VX_DELETE_S(ptr) delete[] ptr // Sequence delete (For Arrays)
+#define VX_DELETE_S(ptr) delete[] ptr       // Sequence delete (For Arrays)
 
 // Defining a universal function signature type to get template function signatures
 #if defined(_MSC_VER)
-        #define VX_FUNC_SIG __FUNCSIG__
-    #elif defined(__GNUC__) || defined(__clang__)
-        #define VX_FUNC_SIG __PRETTY_FUNCTION__
-    #else
-        #define VX_FUNC_SIG __func__
+#define VX_FUNC_SIG __FUNCSIG__
+#elif defined(__GNUC__) || defined(__clang__)
+#define VX_FUNC_SIG __PRETTY_FUNCTION__
+#else
+#define VX_FUNC_SIG __func__
 #endif

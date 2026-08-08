@@ -9,7 +9,7 @@ namespace vortex::math
 
     struct VxRect
     {
-        float x, y;
+        float x, y; // top left corner
         float width, height;
     };
 }

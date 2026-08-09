@@ -50,32 +50,42 @@ namespace vortex::systems
             m_timeStepBucket -= m_timeStep;
 
             b2World_Step(world_id, m_timeStep, m_physicsSubStepCount);
-        }
 
-        ecs::VxRegistry *world_registry = reinterpret_cast<ecs::VxRegistry *>(m_registry);
+            ecs::VxRegistry* world_registry = reinterpret_cast<ecs::VxRegistry*>(m_registry);
 
-        auto view = world_registry->getView<components::VxPhysicsRuntimeComponent, components::VxMotionComponent, components::VxTransformComponent>();
+            auto view_interp = world_registry->getView<components::VxPhysicsRuntimeComponent, components::VxInterpolationComponent, components::VxTransformComponent>();
 
-        for (ecs::VxEntity ent : view)
-        {
-            auto &b2_runtime_id = world_registry->getComponent<components::VxPhysicsRuntimeComponent>(ent).physics_body_id;
-            auto &transform = world_registry->getComponent<components::VxTransformComponent>(ent);
-            auto &motion = world_registry->getComponent<components::VxMotionComponent>(ent);
+            for (ecs::VxEntity ent : view_interp)
+            {
+                auto& transform = world_registry->getComponent<components::VxTransformComponent>(ent);
+                auto& interp = world_registry->getComponent<components::VxInterpolationComponent>(ent);
 
-            auto b2_body_id = b2LoadBodyId(b2_runtime_id);
+                interp.prev_pos = transform.position;
+                interp.prev_rotation = transform.rotation;
+            }
 
-            transform.prev_pos = transform.curr_pos;
-            transform.curr_pos.x = b2Body_GetPosition(b2_body_id).x;
-            transform.curr_pos.y = b2Body_GetPosition(b2_body_id).y;
+            auto view = world_registry->getView<components::VxPhysicsRuntimeComponent, components::VxMotionComponent, components::VxTransformComponent>();
 
-            b2Rot rotation = b2Body_GetRotation(b2_body_id);
-            transform.rotation = b2Rot_GetAngle(rotation);
+            for (ecs::VxEntity ent : view)
+            {
+                auto& b2_runtime_id = world_registry->getComponent<components::VxPhysicsRuntimeComponent>(ent).physics_body_id;
+                auto& transform = world_registry->getComponent<components::VxTransformComponent>(ent);
+                auto& motion = world_registry->getComponent<components::VxMotionComponent>(ent);
 
-            b2Vec2 b2_linear_velocity = b2Body_GetLinearVelocity(b2_body_id);
-            motion.linear_velocity.x = b2_linear_velocity.x;
-            motion.linear_velocity.y = b2_linear_velocity.y;
+                auto b2_body_id = b2LoadBodyId(b2_runtime_id);
 
-            motion.angular_velocity = b2Body_GetAngularVelocity(b2_body_id);
+                transform.position.x = b2Body_GetPosition(b2_body_id).x;
+                transform.position.y = b2Body_GetPosition(b2_body_id).y;
+
+                b2Rot rotation = b2Body_GetRotation(b2_body_id);
+                transform.rotation = b2Rot_GetAngle(rotation);
+
+                b2Vec2 b2_linear_velocity = b2Body_GetLinearVelocity(b2_body_id);
+                motion.linear_velocity.x = b2_linear_velocity.x;
+                motion.linear_velocity.y = b2_linear_velocity.y;
+
+                motion.angular_velocity = b2Body_GetAngularVelocity(b2_body_id);
+            }
         }
     }
 
@@ -102,10 +112,17 @@ namespace vortex::systems
         auto &old_transform = world_registry->getComponent<components::VxTransformComponent>(ent);
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
-        b2Vec2 b2_new_transform = b2Vec2{new_transform.curr_pos.x, new_transform.curr_pos.y};
+        b2Vec2 b2_new_transform = b2Vec2{new_transform.position.x, new_transform.position.y};
         b2Rot b2_new_rotation = b2MakeRot(new_transform.rotation);
 
         old_transform = new_transform;
+
+        if (world_registry->hasComponent<components::VxInterpolationComponent>(ent))
+        {
+            auto& interp = world_registry->getComponent<components::VxInterpolationComponent>(ent);
+            interp.prev_pos = new_transform.position;
+            interp.prev_rotation = new_transform.rotation;
+        }
 
         b2Body_SetTransform(b2_id, b2_new_transform, b2_new_rotation);
     }
@@ -115,9 +132,12 @@ namespace vortex::systems
         ecs::VxRegistry *world_registry = reinterpret_cast<ecs::VxRegistry *>(m_registry);
 
         auto &b2_uint_id = world_registry->getComponent<components::VxPhysicsRuntimeComponent>(ent).physics_body_id;
-        auto &old_velocity = world_registry->getComponent<components::VxMotionComponent>(ent);
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
+        VX_ASSERT(b2Body_GetType(b2_id) != b2_staticBody, "Tried to call setLinearVelocity for static entity with id: {}", ent);
+
+        auto &old_velocity = world_registry->getComponent<components::VxMotionComponent>(ent);
+
         b2Vec2 b2_new_linear_velocity = b2Vec2{new_velocity.x, new_velocity.y};
 
         old_velocity.linear_velocity = new_velocity;
@@ -130,9 +150,12 @@ namespace vortex::systems
         ecs::VxRegistry *world_registry = reinterpret_cast<ecs::VxRegistry *>(m_registry);
 
         auto &b2_uint_id = world_registry->getComponent<components::VxPhysicsRuntimeComponent>(ent).physics_body_id;
-        auto &old_velocity = world_registry->getComponent<components::VxMotionComponent>(ent);
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
+        VX_ASSERT(b2Body_GetType(b2_id) != b2_staticBody, "Tried to call setAngularVelocity for static entity with id: {}", ent);
+
+        auto &old_velocity = world_registry->getComponent<components::VxMotionComponent>(ent);
+
         b2Body_SetAngularVelocity(b2_id, new_angular_velocity);
     }
 
@@ -143,6 +166,8 @@ namespace vortex::systems
         auto &b2_uint_id = world_registry->getComponent<components::VxPhysicsRuntimeComponent>(ent).physics_body_id;
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
+        VX_ASSERT(b2Body_GetType(b2_id) != b2_staticBody, "Tried to call applyLinearImpulse for static entity with id: {}", ent);
+
         b2Vec2 b2_point = b2Vec2{point.x, point.y};
         b2Vec2 b2_linear_impulse = b2Vec2{linear_impulse.x, linear_impulse.y};
 
@@ -157,6 +182,8 @@ namespace vortex::systems
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
 
+        VX_ASSERT(b2Body_GetType(b2_id) != b2_staticBody, "Tried to call applyAngularImpulse for static entity with id: {}", ent);
+
         b2Body_ApplyAngularImpulse(b2_id, angular_impulse, true);
     }
 
@@ -167,6 +194,8 @@ namespace vortex::systems
         auto &b2_uint_id = world_registry->getComponent<components::VxPhysicsRuntimeComponent>(ent).physics_body_id;
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
+        VX_ASSERT(b2Body_GetType(b2_id) != b2_staticBody, "Tried to call applyForce for static entity with id: {}", ent);
+
         b2Vec2 b2_point = b2Vec2{point.x, point.y};
         b2Vec2 b2_force = b2Vec2{force.x, force.y};
 
@@ -181,26 +210,34 @@ namespace vortex::systems
 
         b2BodyId b2_id = b2LoadBodyId(b2_uint_id);
 
+        VX_ASSERT(b2Body_GetType(b2_id) != b2_staticBody, "Tried to call applyTorque for static entity with id: {}", ent);
+
         b2Body_ApplyTorque(b2_id, torque, true);
     }
 
+    template <components::ERigidBodyType BodyType>
     void VxPhysicsSystem::createPhysicsEntity(uint64_t ent)
     {
         ecs::VxRegistry *world_registry = reinterpret_cast<ecs::VxRegistry *>(m_registry);
 
         auto &rigid_body = world_registry->getComponent<components::VxRigidBodyComponent>(ent);
+        VX_ASSERT(rigid_body.body_type == BodyType, "Encountered physics body type mismatch while creating physics entity for entity with id: {}", ent);
+
         auto &transform = world_registry->getComponent<components::VxTransformComponent>(ent);
-        auto &motion = world_registry->getComponent<components::VxMotionComponent>(ent);
 
         b2BodyDef b2_body = b2DefaultBodyDef();
 
+        if constexpr (BodyType != components::ERigidBodyType::Static)
+        {
+            auto& motion = world_registry->getComponent<components::VxMotionComponent>(ent);
+            b2_body.linearVelocity = b2Vec2{ motion.linear_velocity.x, motion.linear_velocity.y };
+            b2_body.angularVelocity = motion.angular_velocity;
+        }
+
         b2_body.type = VxGet_b2BodyType(rigid_body.body_type);
 
-        b2_body.position = b2Vec2{transform.curr_pos.x, transform.curr_pos.y};
+        b2_body.position = b2Vec2{transform.position.x, transform.position.y};
         b2_body.rotation = b2MakeRot(transform.rotation);
-
-        b2_body.linearVelocity = b2Vec2{motion.linear_velocity.x, motion.linear_velocity.y};
-        b2_body.angularVelocity = motion.angular_velocity;
 
         b2_body.linearDamping = rigid_body.linear_damping;
         b2_body.angularDamping = rigid_body.angular_damping;
@@ -216,6 +253,10 @@ namespace vortex::systems
         auto runtime_component = components::VxPhysicsRuntimeComponent{b2StoreBodyId(b2_entity)};
         world_registry->addComponent<components::VxPhysicsRuntimeComponent>(ent, runtime_component);
     }
+
+    template void VxPhysicsSystem::createPhysicsEntity<components::ERigidBodyType::Dynamic>(uint64_t ent);
+    template void VxPhysicsSystem::createPhysicsEntity<components::ERigidBodyType::Static>(uint64_t ent);
+    template void VxPhysicsSystem::createPhysicsEntity<components::ERigidBodyType::Kinematic>(uint64_t ent);
 
     void VxPhysicsSystem::destroyPhysicsEntity(uint64_t ent)
     {

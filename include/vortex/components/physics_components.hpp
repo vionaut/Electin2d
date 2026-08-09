@@ -16,9 +16,14 @@ namespace vortex::components
 
 	struct VxTransformComponent
 	{
-		math::VxVec2 curr_pos;
-		math::VxVec2 prev_pos;
+		math::VxVec2 position;
 		float rotation;
+	};
+
+	struct VxInterpolationComponent
+	{
+		math::VxVec2 prev_pos;
+		float prev_rotation;
 	};
 
 	struct VxBoxColliderComponent

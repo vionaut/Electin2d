@@ -11,6 +11,7 @@
 	};
 
 VX_GENERATE_QUILL_CODEC(vortex::components::VxTransformComponent)
+VX_GENERATE_QUILL_CODEC(vortex::components::VxInterpolationComponent)
 VX_GENERATE_QUILL_CODEC(vortex::components::VxBoxColliderComponent)
 VX_GENERATE_QUILL_CODEC(vortex::components::VxCircleColliderComponent)
 VX_GENERATE_QUILL_CODEC(vortex::components::VxCapsuleColliderComponent)
@@ -71,7 +72,20 @@ struct fmtquill::formatter<vortex::components::VxTransformComponent>
 	{
 		if (name_only)
 			return fmtquill::format_to(ctx.out(), "VxTransformComponent");
-		return fmtquill::format_to(ctx.out(), "VxTransformComponent: [Pos({:.2f}, {:.2f}), Rot: {:.2f}]", t.curr_pos.x, t.curr_pos.y, t.rotation);
+		return fmtquill::format_to(ctx.out(), "VxTransformComponent: [Pos({:.2f}, {:.2f}), Rot: {:.2f}]", t.position.x, t.position.y, t.rotation);
+	}
+};
+
+template <>
+struct fmtquill::formatter<vortex::components::VxInterpolationComponent>
+{
+	VX_GENERATE_FORMATTER_PARSE(VxInterpolationComponent)
+
+	auto format(const vortex::components::VxInterpolationComponent &t, fmtquill::format_context &ctx) const
+	{
+		if (name_only)
+			return fmtquill::format_to(ctx.out(), "VxInterpolationComponent");
+		return fmtquill::format_to(ctx.out(), "VxInterpolationComponent: [Prev_pos({:.2f}, {:.2f}), Prev_rot: {:.2f}]", t.prev_pos.x, t.prev_pos.y, t.prev_rotation);
 	}
 };
 

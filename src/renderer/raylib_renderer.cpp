@@ -60,13 +60,16 @@ namespace
 		switch (type)
 		{
 		case ERenderCommandType::ClearScreen:
+		{
 			VxClearCommand clr;
 			vortex::utils::memcpy(&clr, raw_buffer + offset, sizeof(VxClearCommand));
 
-			ClearBackground(Color{clr.color.r, clr.color.g, clr.color.b, clr.color.a});
+			ClearBackground(Color{ clr.color.r, clr.color.g, clr.color.b, clr.color.a });
 			break;
+		}
 
 		case ERenderCommandType::DrawSprite:
+		{
 			VxSpriteCommand sprite;
 			vortex::utils::memcpy(&sprite, raw_buffer + offset, sizeof(VxSpriteCommand));
 
@@ -81,8 +84,10 @@ namespace
 			DrawTexturePro(ray_tex, ray_src, ray_dest, ray_origin, sprite.rotation, ray_color);
 
 			break;
+		}
 
 		case ERenderCommandType::DrawRectangle:
+		{
 			VxRectCommand rect;
 			vortex::utils::memcpy(&rect, raw_buffer + offset, sizeof(VxRectCommand));
 
@@ -93,6 +98,7 @@ namespace
 			DrawRectanglePro(ray_rect, ray_origin, rect.rotation, ray_color);
 
 			break;
+		}
 
 		case ERenderCommandType::DrawRoundedRect:
 		{

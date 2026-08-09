@@ -29,6 +29,7 @@ namespace vortex::systems
 
         void setTransform(uint64_t ent, const components::VxTransformComponent &new_transform);
 
+        template <components::ERigidBodyType BodyType>
         void createPhysicsEntity(uint64_t ent);  // Physics system needs to create an internal physics entity after the entity manager to apply physics on it
         void destroyPhysicsEntity(uint64_t ent); // To destroy the said entity
 

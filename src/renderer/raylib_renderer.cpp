@@ -9,6 +9,33 @@ using namespace vortex::renderer;
 
 namespace
 {
+	struct
+	{
+		RenderTexture2D virtual_canvas;
+		vortex::renderer::backend::EResolutionMode resolution_mode = vortex::renderer::backend::EResolutionMode::PillarBox;
+		float pillarBox_ratio = 16.0f/ 9.0f;
+
+		//int msaa_4x = 0x00000020; // Internal raylib msaa flag
+
+		bool isVsyncOn;
+		int fps;
+		int vsync_fps;
+
+		int resolution_width;
+		int resolution_height;
+
+		int screen_width;
+		int screen_height;
+
+		int initialized_screen_width;
+		int initialized_screen_height;
+
+		int active_monitor;
+
+		bool openIn_fullScreen = false;
+		bool isCanvas_initialized = false;
+	} VxGraphicsSettings;
+
 	inline Rectangle toRayRect(vortex::math::VxRect& rect)
 	{
 		return {
@@ -247,28 +274,86 @@ namespace
 
 namespace vortex::renderer::backend
 {
-	void initWindow(int width, int height, const char* title)
+	void setResolutionMode(EResolutionMode mode)
 	{
-		SetConfigFlags(FLAG_WINDOW_HIDDEN | FLAG_WINDOW_HIGHDPI | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT) ;
+		VxGraphicsSettings.resolution_mode = mode;
+	}
 
-		InitWindow(width, height, title);
+	void setCanvasResolution(int width, int height)
+	{
+		VxGraphicsSettings.resolution_width = width;
+		VxGraphicsSettings.resolution_height = height;
 
-		int monitor = GetCurrentMonitor();
-		int screen_width = GetMonitorWidth(monitor);
-		int screen_height = GetMonitorHeight(monitor);
-		int refresh_rate = GetMonitorRefreshRate(monitor);
+		if (VxGraphicsSettings.isCanvas_initialized) {
+			UnloadRenderTexture(VxGraphicsSettings.virtual_canvas);
+		}
 
-		SetWindowSize(screen_width, screen_height);
-		SetWindowPosition(0, 0);
+		VxGraphicsSettings.virtual_canvas = LoadRenderTexture(VxGraphicsSettings.resolution_width, VxGraphicsSettings.resolution_height);
+		VxGraphicsSettings.isCanvas_initialized = true;
+	}
+
+	void setFPS(int fps)
+	{
+		if(!VxGraphicsSettings.isVsyncOn)
+			VxGraphicsSettings.fps = fps;
+		SetTargetFPS(VxGraphicsSettings.fps);
+	}
+
+	//void setFXAA_4X(bool set)
+	//{
+	//	VxGraphicsSettings.msaa_4x = 0x00000020 * set;
+	//}
+
+	void setVsync(bool set) {
+		VxGraphicsSettings.isVsyncOn = set;
+		if(set)
+			VxGraphicsSettings.fps = VxGraphicsSettings.vsync_fps;
+		SetTargetFPS(VxGraphicsSettings.fps);
+	}
+
+	void setFullScreen(bool set)
+	{
+		if (set && !IsWindowFullscreen())
+		{
+			int monitor = GetCurrentMonitor();
+			VxGraphicsSettings.screen_width = GetMonitorWidth(monitor);
+			VxGraphicsSettings.screen_height = GetMonitorHeight(monitor);
+
+			SetWindowSize(VxGraphicsSettings.screen_width, VxGraphicsSettings.screen_height);
+
+			ToggleFullscreen();
+		}
+		else if (!set && IsWindowFullscreen())
+		{
+			ToggleFullscreen();
+
+			VxGraphicsSettings.screen_width = VxGraphicsSettings.initialized_screen_width;
+			VxGraphicsSettings.screen_height = VxGraphicsSettings.initialized_screen_height;
+
+			SetWindowSize(VxGraphicsSettings.screen_width, VxGraphicsSettings.screen_height);
+		}
+	}
+
+	void initWindow(int width = config::INITIAL_WINDOW_WIDTH, int height = config::INITIAL_WINDOW_HEIGHT, const char* title)
+	{
+		VxGraphicsSettings.initialized_screen_width = width;
+		VxGraphicsSettings.initialized_screen_height = height;
+		SetConfigFlags(FLAG_WINDOW_HIDDEN | FLAG_WINDOW_HIGHDPI) ;
+
+		InitWindow(VxGraphicsSettings.initialized_screen_width, VxGraphicsSettings.initialized_screen_height, title);
+		SetExitKey(KEY_NULL);
+
+		setCanvasResolution(config::INITIAL_RESOLUTION_WIDTH, config::INITIAL_RESOLUTION_HEIGHT);
+
+		VxGraphicsSettings.active_monitor = GetCurrentMonitor();
+		VxGraphicsSettings.screen_width = GetMonitorWidth(VxGraphicsSettings.active_monitor);
+		VxGraphicsSettings.screen_height = GetMonitorHeight(VxGraphicsSettings.active_monitor);
+		VxGraphicsSettings.vsync_fps = GetMonitorRefreshRate(VxGraphicsSettings.active_monitor);
 
 		ClearWindowState(FLAG_WINDOW_HIDDEN);
+		setFullScreen(VxGraphicsSettings.openIn_fullScreen);
 
-		SetWindowState(FLAG_FULLSCREEN_MODE);
-
-		if (refresh_rate > 0)
-			SetTargetFPS(refresh_rate);
-		else
-			SetTargetFPS(60);
+		setVsync(true);
 	}
 
 	void closeWindow()
@@ -303,10 +388,11 @@ namespace vortex::renderer::backend
 
 	void beginFrame()
 	{
-		BeginDrawing();
+		BeginTextureMode(VxGraphicsSettings.virtual_canvas);
+		ClearBackground(BLACK);
 	}
 
-	void executeQueue(const VxCommandBuffer& buffer, containers::VxStaticArray<VxTexture, config::MAX_TEXTURES>& textures, const VxCamera2d& camera)
+	void executeQueue(const VxCommandBuffer& buffer, containers::VxStaticArray<VxTexture, config::MAX_TEXTURES + 1>& textures, const VxCamera2d& camera)
 	{
 		Camera2D rayCamera = { 0 };
 		rayCamera.target = { camera.target.x, camera.target.y };
@@ -329,6 +415,75 @@ namespace vortex::renderer::backend
 
 	void endFrame()
 	{
+		EndTextureMode();
+
+		BeginDrawing();
+		ClearBackground(BLACK);
+
+		Rectangle source_rect = { 0.0f, 0.0f, (float)VxGraphicsSettings.resolution_width, -(float)VxGraphicsSettings.resolution_height };
+		Rectangle dest_rect = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+		VxGraphicsSettings.screen_width = GetScreenWidth();
+		VxGraphicsSettings.screen_height = GetScreenHeight();
+
+		int current_monitor = GetCurrentMonitor();
+
+		if (VxGraphicsSettings.active_monitor != current_monitor)
+		{
+			VxGraphicsSettings.active_monitor = current_monitor;
+			VxGraphicsSettings.vsync_fps = GetMonitorRefreshRate(VxGraphicsSettings.active_monitor);
+
+			setVsync(VxGraphicsSettings.isVsyncOn);
+		}
+
+		switch (VxGraphicsSettings.resolution_mode)
+		{
+		case EResolutionMode::Expand: // If the canvas and the monitor are in the same ratio, it expands, otherwise behave as PillarBox
+		{
+			float scaleX = (float)VxGraphicsSettings.screen_width / VxGraphicsSettings.resolution_width;
+			float scaleY = (float)VxGraphicsSettings.screen_height / VxGraphicsSettings.resolution_height;
+			float scale = (scaleX < scaleY) ? scaleX : scaleY;
+
+			dest_rect.width = VxGraphicsSettings.resolution_width * scale;
+			dest_rect.height = VxGraphicsSettings.resolution_height * scale;
+			dest_rect.x = ((float)VxGraphicsSettings.screen_width - dest_rect.width) * 0.5f;
+			dest_rect.y = ((float)VxGraphicsSettings.screen_height - dest_rect.height) * 0.5f;
+
+			break;
+		}
+
+		case EResolutionMode::PillarBox:
+		{
+			float target_width = (float)VxGraphicsSettings.screen_width;
+			float target_height = target_width / VxGraphicsSettings.pillarBox_ratio;
+
+			// 2. If doing that makes it too tall for the monitor, we flip it.
+			// We stretch all the way vertically, and calculate the width instead.
+			if (target_height > (float)VxGraphicsSettings.screen_height)
+			{
+				target_height = (float)VxGraphicsSettings.screen_height;
+				target_width = target_height * VxGraphicsSettings.pillarBox_ratio;
+			}
+
+			// 3. Set the destination and center it to create the black bars!
+			dest_rect.width = target_width;
+			dest_rect.height = target_height;
+			dest_rect.x = ((float)VxGraphicsSettings.screen_width - dest_rect.width) * 0.5f;
+			dest_rect.y = ((float)VxGraphicsSettings.screen_height - dest_rect.height) * 0.5f;
+
+			break;
+		}
+
+		case EResolutionMode::Stretch:
+		{
+			dest_rect = { 0.0f, 0.0f, (float)VxGraphicsSettings.screen_width, (float)VxGraphicsSettings.screen_height };
+
+			break;
+		}
+		}
+
+		DrawTexturePro(VxGraphicsSettings.virtual_canvas.texture, source_rect, dest_rect, { 0, 0 }, 0.0f, WHITE);
+
 		EndDrawing();
 	}
 }

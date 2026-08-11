@@ -98,4 +98,31 @@ namespace vortex::components
 		renderer::VxColor color;
 		uint16_t layer = 0;
 	};
+
+	struct VxSplineComponent
+	{
+		// Array of points. Note: Since this is a pointer, the memory must be managed by the user!
+		const math::VxVec2* points; 
+		int point_count;
+		float thickness;
+		renderer::VxColor color;
+		uint16_t layer = 0;
+	};
+
+	struct VxPixelComponent
+	{
+		// Local offset from Transform position
+		math::VxVec2 local_offset; 
+		renderer::VxColor color;
+		uint16_t layer = 0;
+	};
+
+	struct VxMeshComponent
+	{
+		// Array of vertices. Note: Since this is a pointer, the memory must be managed by the user!
+		const math::VxVec2* vertices;
+		int vertex_count;
+		renderer::VxColor color;
+		uint16_t layer = 0;
+	};
 }

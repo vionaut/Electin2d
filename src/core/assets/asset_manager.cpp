@@ -1,6 +1,5 @@
 #include "vortex/core/assets/asset_manager.hpp"
 #include "vortex/core/io/logger/vortex_logger.hpp"
-#include "vortex/core/config/vortex_config.hpp"
 
 #include "vortex/core/containers/hash_map.hpp"
 #include "vortex/core/containers/string.hpp"
@@ -29,10 +28,14 @@ namespace vortex::core
 		containers::VxStaticArray<audio::backend::VxMusic, config::MAX_MUSICS + 1> musics;
 	};
 
-	VxAssetManager::VxAssetManager()
-		: m_nextTextureId(1), m_nextSoundId(1), m_nextMusicId(1)
+	void VxAssetManager::init()
 	{
-		m_impl = utils::vxMakeUnique<Impl>();
+		VX_ASSERT(!m_impl, "Attempted Reinitialization of Asset Manager!...");
+
+		m_nextTextureId = 1;
+		m_nextSoundId = 1;
+		m_nextMusicId = 1;
+		m_impl = VX_NEW(Impl);
 
 		for (size_t i = 0; i < config::MAX_TEXTURES; ++i)
 		{
@@ -49,22 +52,25 @@ namespace vortex::core
 			m_impl->musics_free_list[i] = i + 1;
 		}
 
-		VX_LOG_DEBUG("Asset Manager Initialized");
+		VX_LOG_INFO("Asset Manager Initialized");
 	}
 
-	VxAssetManager::~VxAssetManager()
+	void VxAssetManager::shutdown()
 	{
+		VX_ASSERT(m_impl, "Attempted shutdown of an uninitialized Asset Manager!...");
+
 		for (unsigned int id = 1; id <= config::MAX_TEXTURES; ++id) {
-			this->unloadTexture(id);
+			unloadTexture(id);
 		}
 		for (unsigned int id = 1; id <= config::MAX_SOUNDS; ++id) {
-			this->unloadSound(id);
+			unloadSound(id);
 		}
 		for (unsigned int id = 1; id <= config::MAX_MUSICS; ++id) {
-			this->unloadMusic(id);
+			unloadMusic(id);
 		}
 
-		VX_LOG_DEBUG("Asset Manager Destroyed");
+		VX_DELETE(m_impl);
+		VX_LOG_INFO("Asset Manager Destroyed");
 	}
 
 	unsigned int VxAssetManager::loadTexture(const char* filepath)
@@ -200,5 +206,20 @@ namespace vortex::core
 			m_impl->musics_free_list[id] = m_impl->musics_free_list[0];
 			m_impl->musics_free_list[0] = id;
 		}
+	}
+
+	containers::VxStaticArray<renderer::VxTexture, config::MAX_TEXTURES + 1>& VxAssetManager::getTexturesAll()
+	{
+		return m_impl->textures;
+	}
+
+	containers::VxStaticArray<audio::backend::VxSound, config::MAX_SOUNDS + 1>& VxAssetManager::getSoundsAll()
+	{
+		return m_impl->sounds;
+	}
+
+	containers::VxStaticArray<audio::backend::VxMusic, config::MAX_MUSICS + 1>& VxAssetManager::getMusicsAll()
+	{
+		return m_impl->musics;
 	}
 }

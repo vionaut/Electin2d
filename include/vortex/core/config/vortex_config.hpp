@@ -11,6 +11,10 @@ namespace vortex::config
     constexpr size_t MAX_TEXTURES = 128;
     constexpr size_t MAX_SOUNDS = 128;
     constexpr size_t MAX_MUSICS = 128;
+    constexpr int INITIAL_WINDOW_WIDTH = 1280;
+    constexpr int INITIAL_WINDOW_HEIGHT = 720;
+    constexpr int INITIAL_RESOLUTION_WIDTH = 1920;
+    constexpr int INITIAL_RESOLUTION_HEIGHT = 1080;
 
     // Dependent (Calculated by Python)
     constexpr uint64_t ENTITY_INDEX_BITS = 12;

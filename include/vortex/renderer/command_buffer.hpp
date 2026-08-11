@@ -2,7 +2,9 @@
 
 #include "vortex/core/config/vortex_config.hpp"
 #include "vortex/core/containers/vortex_array.hpp"
+//--------------------------------------------
 #include "vortex/renderer/vortex_graphics.hpp"
+//--------------------------------------------
 #include "vortex/core/io/logger/vortex_logger.hpp"
 #include "vortex/core/utilities/algorithm.hpp"
 

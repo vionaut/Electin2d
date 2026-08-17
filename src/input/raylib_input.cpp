@@ -1,9 +1,9 @@
-#include "vortex/input/input_backend.hpp"
+#include "el/input/input_backend.hpp"
 #include "raylib.h"
 
-using namespace vortex;
+using namespace el;
 
-namespace vortex::input
+namespace el
 {
     static int translateToRaylibKey(EKeyCode key)
     {

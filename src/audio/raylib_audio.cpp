@@ -1,16 +1,16 @@
-#include "vortex/audio/audio_backend.hpp"
+#include "el/audio/audio_backend.hpp"
 #include "raylib.h"
 // #include "miniaudio.h"
 
-#include "vortex/core/containers/hash_map.hpp"
+#include "el/core/containers/hash_map.hpp"
 #include <unordered_map>
 
-namespace vortex::audio::backend
+namespace el::backend
 {
-    static containers::VxHashMap<unsigned int, Sound> g_sounds;
+    static ElHashMap<unsigned int, Sound> g_sounds;
     static unsigned int g_nextSoundId = 1;
 
-    static containers::VxHashMap<unsigned int, Music> g_music;
+    static ElHashMap<unsigned int, Music> g_music;
     static unsigned int g_nextMusicId = 1;
 
     void initAudio() {
@@ -22,61 +22,61 @@ namespace vortex::audio::backend
     }
 
     // --- SOUND EFFECTS ---
-    VxSound loadSound(const char* filepath) {
+    ElSound loadSound(const char* filepath) {
         Sound raySound = LoadSound(filepath);
         unsigned int id = g_nextSoundId++;
         g_sounds[id] = raySound;
         return { id };
     }
 
-    void unloadSound(VxSound sound) {
+    void unloadSound(ElSound sound) {
         if (g_sounds.find(sound.id) != g_sounds.end()) {
             UnloadSound(g_sounds[sound.id]);
             g_sounds.erase(sound.id);
         }
     }
 
-    void playSound(VxSound sound) {
+    void playSound(ElSound sound) {
         if (g_sounds.find(sound.id) != g_sounds.end())
             PlaySound(g_sounds[sound.id]);
     }
 
-    void stopSound(VxSound sound) {
+    void stopSound(ElSound sound) {
         if (g_sounds.find(sound.id) != g_sounds.end())
             StopSound(g_sounds[sound.id]);
     }
 
-    void setVolume(VxSound sound, float volume) {
+    void setVolume(ElSound sound, float volume) {
         if (g_sounds.find(sound.id) != g_sounds.end())
             SetSoundVolume(g_sounds[sound.id], volume);
     }
 
     // --- BACKGROUND MUSIC ---
-    VxMusic loadMusic(const char* filepath) {
+    ElMusic loadMusic(const char* filepath) {
         Music rayMusic = LoadMusicStream(filepath);
         unsigned int id = g_nextMusicId++;
         g_music[id] = rayMusic;
         return { id };
     }
 
-    void unloadMusic(VxMusic music) {
+    void unloadMusic(ElMusic music) {
         if (g_music.find(music.id) != g_music.end()) {
             UnloadMusicStream(g_music[music.id]);
             g_music.erase(music.id);
         }
     }
 
-    void playMusic(VxMusic music) {
+    void playMusic(ElMusic music) {
         if (g_music.find(music.id) != g_music.end())
             PlayMusicStream(g_music[music.id]);
     }
 
-    void stopMusic(VxMusic music) {
+    void stopMusic(ElMusic music) {
         if (g_music.find(music.id) != g_music.end())
             StopMusicStream(g_music[music.id]);
     }
 
-    void updateMusic(VxMusic music) {
+    void updateMusic(ElMusic music) {
         if (g_music.find(music.id) != g_music.end())
             UpdateMusicStream(g_music[music.id]);
     }

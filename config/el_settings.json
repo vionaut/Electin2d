@@ -1,0 +1,12 @@
+{
+    "Max-Entities": 10009,
+    "Max-Components": 32,
+    "Max-Render-Commands": 16386,
+    "Max-Textures": 128,
+    "Max-Sounds": 128,
+    "Max-Musics": 128,
+    "Initial-Window-Width": 1280,
+    "Initial-Window-Height": 720,
+    "Initial-Resolution-Width": 1920,
+    "Initial-Resolution-Height": 1080
+}

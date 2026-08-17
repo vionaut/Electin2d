@@ -1,5 +1,5 @@
-add_library(vortex_input
+add_library(el_input
     input_manager.cpp
     raylib_input.cpp
 )
-target_link_libraries(vortex_input PUBLIC vortex_includes PRIVATE raylib vortex_core)
+target_link_libraries(el_input PUBLIC el_includes PRIVATE raylib el_core)

@@ -1,16 +1,16 @@
-#include "vortex/core/containers/hash_map.hpp"
-#include "vortex/input/input_manager.hpp"
+#include "el/core/containers/hash_map.hpp"
+#include "el/input/input_manager.hpp"
 
-using namespace vortex;
+using namespace el;
 
-namespace vortex::input
+namespace el
 {
     struct Impl
     {
-        containers::VxHashMap<EInputAction, EKeyCode> m_keyBindings;
+        ElHashMap<EInputAction, EKeyCode> m_keyBindings;
     };
 
-    VxInputManager::VxInputManager()
+    ElInputManager::ElInputManager()
     {
         m_impl = new Impl;
 
@@ -22,17 +22,17 @@ namespace vortex::input
         bindActionKey(EInputAction::Quit, EKeyCode::Esc);
     }
 
-    VxInputManager::~VxInputManager()
+    ElInputManager::~ElInputManager()
     {
         delete m_impl;
     }
 
-    void VxInputManager::bindActionKey(EInputAction action, EKeyCode key)
+    void ElInputManager::bindActionKey(EInputAction action, EKeyCode key)
     {
         m_impl->m_keyBindings[action] = key;
     }
 
-    bool VxInputManager::isActionHeld(EInputAction action) const
+    bool ElInputManager::isActionHeld(EInputAction action) const
     {
         auto it = m_impl->m_keyBindings.find(action);
         if (it != m_impl->m_keyBindings.end())
@@ -42,7 +42,7 @@ namespace vortex::input
         return false;
     }
 
-    bool VxInputManager::isActionPressed(EInputAction action) const
+    bool ElInputManager::isActionPressed(EInputAction action) const
     {
         auto it = m_impl->m_keyBindings.find(action);
         if (it != m_impl->m_keyBindings.end())
